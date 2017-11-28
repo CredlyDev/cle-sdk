@@ -7,7 +7,7 @@ $env    = require('.env.php');
 
 $base = require('base.php');
 
-if($_POST){
+if(isset($_POST)){
 
     $client = $base($env['enterprise_url']);
 
