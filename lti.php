@@ -64,7 +64,7 @@ if(isset($_POST) && !empty($_POST)){
         ]
     ]);
 
-    $integrations = json_decode($res->getBody())->data;    
+    $integrations = json_decode($res->getBody())->data ?: [];    
 
 }
 
