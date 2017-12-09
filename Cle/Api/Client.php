@@ -6,27 +6,52 @@ use GuzzleHttp\Subscriber\Oauth\Oauth1;
 use Cle\Api\Collection\GradableCollection;
 use Cle\Api\Collection\StudentCollection;
 use Cle\Api\Collection\RuleCollection;
+use Cle\Api\Collection\CourseCollection;
 
-class Client{
+class Client implements ClientInterface{
+
+    use \Cle\Api\Traits\ClientTrait{
+        __call as protected call;
+    }
 
     protected $client;
 
-    protected $token;
-
-    protected $integrationAccountId;
+    protected $tokens;
 
     protected $api;
 
     public function __construct( $url, array $config ){
 
-        $this->client = static::initClient( $url, $config );
+        $this->setClient(
+            static::initClient( $url, $config )
+        );
 
-        $this->api = static::initApi( $this->client );
+        $this->api = static::initApi( $this->client, $this );
+    }
+
+    public function connect( array $params ){
+
+        $res = $this->post('cle_auth/connect', [
+            'auth' => 'oauth',
+            'form_params' => [
+                'user_id'        => $params['user_id'],
+                'integration_id' => $params['integration_id']
+            ]
+        ]);
+
+        $data = $res->data;
+
+        $this->setTokens([
+            'access_token'           => $data->token,
+            'integration_account_id' => $data->connected_account_id,
+        ]);
+
+        return $this;
     }
 
     public function authenticate( array $params ){
 
-        $res = $this->client->post('cle_auth/authenticate', [
+        $res = $this->post('cle_auth/authenticate', [
             'auth' => 'oauth',
             'form_params' => [
                 "user_id"      => $params['user_id'],
@@ -37,14 +62,28 @@ class Client{
             ]
         ]);
 
-        $data = json_decode($res->getBody())->data;
+        $data = $res->data;
 
-        $this->token = $data->token;
-
-        $this->integrationAccountId = $data->connected_account_id;
+        $this->setTokens([
+            'access_token'           => $data->token,
+            'integration_account_id' => $data->connected_account_id,
+        ]);
 
         return $this;
     }
+
+    public function setTokens( array $tokens ){
+        $this->tokens = $tokens;
+    }
+
+    /**
+     * performs request, or returns the api class matching function call
+     *
+     * @param      <type>  $fn      The function
+     * @param      <type>  $params  The parameters
+     *
+     * @return     <type>  ( description_of_the_return_value )
+     */
 
     public function __call($fn, $params){
 
@@ -52,12 +91,7 @@ class Client{
 
             $api = $this->api[$fn];
 
-            $api->setClient( $this->client );            
-
-            $api->setTokens([
-                'access_token' => $this->token,
-                'integration_account_id' => $this->integrationAccountId
-            ]);
+            $api->setClient( $this );  
 
             if(isset($params[0])){
                 $api->fetchItems( $params[0] );
@@ -66,15 +100,43 @@ class Client{
             return $api;
         }
 
-        throw new \BadMethodCallException(sprintf("Call to undefined method %s", $fn));
+        $params[1] = $this->addDefaultRequestParams( isset($params[1]) ? $params[1]: [] ); 
+
+        return $this->call($fn, @$params);
     }
 
-    protected static function initApi( $client ){
+    /**
+     * Adds default request parameters.
+     *
+     * @param      array  $params  The parameters
+     */
+
+    protected function addDefaultRequestParams( array $params ){
+
+        if($this->tokens) $params['query'] = array_merge(
+            isset($params['query']) ? $params['query'] : [],
+            $this->tokens
+        ); 
+
+        return $params;
+    }
+
+    /**
+     * get the api callback classes
+     *
+     * @param      <type>  $client  The client
+     *
+     * @return     array   ( description_of_the_return_value )
+     */
+
+    protected static function initApi( $client, $cle ){
 
         return [
             'students'  => new StudentCollection([]),
             'gradable'  => new GradableCollection([]),
             'rules'     => new RuleCollection([]),
+            'courses'   => new CourseCollection([]),
+            'credly'    => new CredlyClient(),
         ];
     }
 

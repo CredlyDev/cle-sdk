@@ -43,14 +43,9 @@ class GradableCollection extends ApiCollection{
 
     public function fetchItems( array $params = [] ){
 
-        $res = $this->getClient()->get('cle_gradable', [
-            'query' => [
-                'access_token' => $this->tokens['access_token'],
-                'integration_account_id' => $this->tokens['integration_account_id']
-            ]
-        ]);
+        $res = $this->getClient()->get('cle_gradable');
 
-        $this->items = json_decode($res->getBody())->data;
+        $this->items = $res->data;
 
         return $this;
     }
@@ -71,7 +66,6 @@ class GradableCollection extends ApiCollection{
         }
 
         $params = [
-            'query' => $this->tokens,
             'form_params'=> [
                 'grades' => $this->items
             ]
@@ -79,7 +73,7 @@ class GradableCollection extends ApiCollection{
 
         $res = $this->getClient()->post('cle_gradable/create', $params);
 
-        return json_decode($res->getBody());
+        return $res;
     }
 
 }

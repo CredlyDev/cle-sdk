@@ -35,11 +35,9 @@ class StudentCollection extends ApiCollection{
 
     public function fetchItems( array $params = [] ){
 
-        $res = $this->getClient()->get('cle_students',[
-            'query' => $this->tokens
-        ]);
+        $res = $this->getClient()->get('cle_students');
 
-        $this->items = json_decode($res->getBody())->data;
+        $this->items = $res->data;
 
         return $this;
     }
@@ -60,14 +58,13 @@ class StudentCollection extends ApiCollection{
         }
 
         $params = [
-            'query' => $this->tokens,
             'form_params'=> [
                 'students' => $this->items
             ]
-        ];        
+        ];
 
         $res = $this->getClient()->post('cle_students/create', $params);
 
-        return $this->items = json_decode($res->getBody());
+        return $this->items = $res->data;
     }
 }

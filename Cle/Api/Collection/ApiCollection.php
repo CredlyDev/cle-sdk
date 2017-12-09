@@ -2,26 +2,19 @@
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
+use Cle\Api\Client as CLE;
 
 abstract class ApiCollection extends Collection implements ApiCollectionInterface{
 
-    protected $client;
-
-    public function setTokens(array $tokens){
-        $this->tokens = $tokens;
-    }
-
-    public function setClient( Client $client ){
-
-        $this->client = $client;
-
-        return $this;
-    }
+    protected $cle;
 
     public function getClient(){
-
-        return $this->client;
+        return $this->cle;
     }
+
+    public function setClient(CLE $cle){
+        return $this->cle = $cle;
+    }    
 
     public abstract function fetchItems( array $params = [] );
 

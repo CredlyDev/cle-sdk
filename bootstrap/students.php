@@ -2,7 +2,7 @@
 
 $client = isset($client) ? $client : require(dirname(__FILE__).'/auth.php');
 
-$students = $client->rules();
+$students = $client->students();
 
 $students->put('123', (object) [
     'first'     => 'John',

@@ -9,5 +9,4 @@ interface ApiCollectionInterface{
     public function fetchItems( array $params = [] );
 
     public function save( array $params );
-
 }

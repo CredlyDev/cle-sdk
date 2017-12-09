@@ -113,13 +113,31 @@ class RuleCollection extends ApiCollection{
 
         $callback( $rule );
 
-        $this->items[$name] = (object) [
+        $this->items[] = (object) [
             'id'   => 'new',
-            'name' => $name,
+            'name' => trim($name),
             'requirements' => $rule->getRequirements()
         ];
 
         return $this;    
+    }
+
+    /**
+     * Gets the rule.
+     *
+     * @param      <type>  $name   The name
+     *
+     * @return     <type>  The rule.
+     */
+
+    public function getRule( $name ){
+
+        return $this->search(function($rule, $key) use($name){
+
+            if($rule->name === trim($name) || $rule->id === $name){
+                return $rule;
+            }
+        });
     }
 
     /**
@@ -130,13 +148,11 @@ class RuleCollection extends ApiCollection{
 
         $res = $this->getClient()->get('cle_rules',[
             'query' => [
-                'badge_id'     => $this->getBadgeId(),
-                'access_token' => $this->tokens['access_token'],
-                'integration_account_id' => $this->tokens['integration_account_id']
+                'badge_id'     => $this->getBadgeId()
             ]
         ]);
 
-        $data = json_decode($res->getBody())->data;
+        $data = $res->data;
 
         $this->items = $data->rules;
         $this->setDesc( $data->desc );
@@ -160,7 +176,6 @@ class RuleCollection extends ApiCollection{
         }
 
         $params = [
-            'query' => $this->tokens,
             'form_params'=> [
                 'rules'    => $this->items,
                 'desc'     => $this->getDesc(),
@@ -170,7 +185,7 @@ class RuleCollection extends ApiCollection{
 
         $res = $this->getClient()->post('cle_rules/update', $params);
 
-        return $this->items = json_decode($res->getBody());
+        return $this->items = $res->data->rules;
     }
 
 }
