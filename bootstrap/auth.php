@@ -6,11 +6,13 @@ require $basedir.'/vendor/autoload.php';
 
 $env = require($basedir.'/.env.php');
 
-$client = new Cle\Api\Client( $env['api_url'], $env );
+$client = require(dirname(__FILE__).'/create.php');
+
+$courses = $client->courses();
 
 $client->authenticate([
     'user_id'        => $env['user_id'],
-    'integration_id' => $env['integration_id'],
+    'integration_id' => $courses[$env['course_id']]->id,
     'email'          => $env['email'],
     'roles'          => 'ADMINISTRATOR',
 ]);

@@ -15,7 +15,7 @@ $cle->credly()->authenticate(
 
 $courses = $cle->courses();
 
-$courses->addCourse('course_id_2', 'Name of Course changed');
+$courses->addCourse($env['course_id'], sprintf('This is course: %s', $env['course_id']));
 
 $courses->save();
 
@@ -23,8 +23,10 @@ $courses->save();
 //retreive a token for that course
 $cle->connect([
     'user_id'        => $env['user_id'],
-    'integration_id' => $courses['course_id_2']->id
+    'integration_id' => $courses[$env['course_id']]->id
 ]);
+
+return $cle;
 
 //now perform all cle related tasks for course_id
 
